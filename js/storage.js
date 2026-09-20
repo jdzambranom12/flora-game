@@ -11,14 +11,18 @@ class ScoreStorage {
 
   _initDefaults() {
     if (!localStorage.getItem(this.STORAGE_KEY)) {
-      const defaultScores = [
-        { name: 'ANA', score: 1250, plantsCut: 48, entanglements: 0, date: '19/09/2026' },
-        { name: 'JUAN', score: 1120, plantsCut: 42, entanglements: 1, date: '19/09/2026' },
-        { name: 'SOFÍA', score: 980, plantsCut: 38, entanglements: 1, date: '18/09/2026' },
-        { name: 'MATEO', score: 850, plantsCut: 34, entanglements: 2, date: '18/09/2026' },
-        { name: 'VALENTINA', score: 720, plantsCut: 30, entanglements: 2, date: '17/09/2026' }
-      ];
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(defaultScores));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify([]));
+      return;
+    }
+
+    try {
+      const storedScores = JSON.parse(localStorage.getItem(this.STORAGE_KEY));
+      if (Array.isArray(storedScores)) {
+        const realScores = storedScores.filter(entry => Number.isFinite(entry.timestamp));
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(realScores));
+      }
+    } catch (e) {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify([]));
     }
   }
 
@@ -27,8 +31,12 @@ class ScoreStorage {
       const data = localStorage.getItem(this.STORAGE_KEY);
       if (!data) return [];
       const scores = JSON.parse(data);
+      if (!Array.isArray(scores)) return [];
       // Ordenar de mayor a menor puntaje
-      return scores.sort((a, b) => b.score - a.score).slice(0, 10);
+      return scores
+        .filter(entry => Number.isFinite(entry.timestamp))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
     } catch (e) {
       console.error('Error al leer leaderboard:', e);
       return [];
@@ -48,7 +56,7 @@ class ScoreStorage {
 
       const newEntry = {
         name: cleanName,
-        score: Math.max(0, Math.floor(score)),
+        score: Number.isFinite(score) ? score : 0,
         plantsCut,
         entanglements,
         maxCombo,

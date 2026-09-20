@@ -51,7 +51,16 @@ class Plant {
    * @param {number} growthSpeedMultiplier - Modificador por fase de dificultad
    * @param {number} moveSpeedMultiplier - Modificador por fase de dificultad
    */
-  constructor(typeInfo, spawnX, spawnY, targetX, targetY, growthSpeedMultiplier = 1.0, moveSpeedMultiplier = 1.0) {
+  constructor(
+    typeInfo,
+    spawnX,
+    spawnY,
+    targetX,
+    targetY,
+    growthSpeedMultiplier = 1.0,
+    moveSpeedMultiplier = 1.0,
+    speedVariation = 1.0
+  ) {
     this.type = typeInfo;
     this.x = spawnX;
     this.y = spawnY;
@@ -64,10 +73,11 @@ class Plant {
     this.stage = 1;
     this.growthProgress = 0; // 0.0 a 1.0
     this.growthDuration = Math.max(0.6, this.type.baseGrowthTime / growthSpeedMultiplier);
-    this.speed = this.type.baseSpeed * moveSpeedMultiplier;
+    this.speed = this.type.baseSpeed * moveSpeedMultiplier * speedVariation;
 
     this.canBeCut = false;
     this.isDead = false;
+    this.hasBeenScored = false;
     this.reachedFlora = false;
 
     this.radius = this.type.radius;
@@ -132,7 +142,7 @@ class Plant {
    * Comprueba si un segmento de swipe (p1 -> p2) corta la planta
    */
   checkCutIntersection(p1, p2) {
-    if (!this.canBeCut || this.isDead || this.reachedFlora) return false;
+    if (!this.canBeCut || this.isDead || this.reachedFlora || this.hasBeenScored) return false;
 
     // Distancia del punto (this.x, this.y) al segmento de recta p1-p2
     const dist = distToSegment(this.x, this.y, p1.x, p1.y, p2.x, p2.y);
@@ -319,11 +329,15 @@ class Plant {
     const spY = Math.sin(this.pulseAnim * 1.5) * (this.radius * 0.6);
     drawSparkle(ctx, spX, spY, 5);
 
-    // Texto de alerta o cortar
-    ctx.fillStyle = isUrgent ? '#FF5252' : '#FFFFFF';
     ctx.font = 'bold 11px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(isUrgent ? '¡ALERTA!' : '¡CORTA!', 0, this.radius + 14);
+    const actionLabel = isUrgent ? '¡ALERTA!' : 'CORTAR';
+    const labelY = this.radius + 14;
+    const labelWidth = ctx.measureText(actionLabel).width + 12;
+    ctx.fillStyle = 'rgba(38, 50, 56, 0.86)';
+    ctx.fillRect(-labelWidth / 2, labelY - 12, labelWidth, 17);
+    ctx.fillStyle = isUrgent ? '#FFCDD2' : '#FFF8E1';
+    ctx.fillText(actionLabel, 0, labelY);
   }
 }
 

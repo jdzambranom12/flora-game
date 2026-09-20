@@ -276,14 +276,10 @@ class UIManager {
     const scores = window.scoreStorage.getLeaderboard();
     listContainer.innerHTML = '';
 
-    if (scores.length === 0) {
-      listContainer.innerHTML = '<div class="leaderboard-empty">Aún no hay puntajes registrados. ¡Sé el primero en jugar!</div>';
-      return;
-    }
-
-    scores.forEach((entry, idx) => {
+    for (let idx = 0; idx < 10; idx++) {
+      const entry = scores[idx];
       const row = document.createElement('div');
-      row.className = `leaderboard-row rank-${idx + 1}`;
+      row.className = `leaderboard-row rank-${idx + 1}${entry ? '' : ' leaderboard-row-empty'}`;
 
       let medal = '';
       if (idx === 0) medal = '🥇 ';
@@ -292,12 +288,12 @@ class UIManager {
 
       row.innerHTML = `
         <div class="lb-rank">${medal}${idx + 1}.</div>
-        <div class="lb-name">${escapeHTML(entry.name)}</div>
-        <div class="lb-stats">🌱 ${entry.plantsCut || 0} cortadas</div>
-        <div class="lb-score">${entry.score} pts</div>
+        <div class="lb-name">${entry ? escapeHTML(entry.name) : ''}</div>
+        <div class="lb-stats">${entry ? `🌱 ${entry.plantsCut || 0} cortadas` : ''}</div>
+        <div class="lb-score">${entry ? `${entry.score} pts` : ''}</div>
       `;
       listContainer.appendChild(row);
-    });
+    }
   }
 }
 

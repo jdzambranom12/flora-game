@@ -603,6 +603,10 @@ html, body {
   border-color: #FFAB91;
 }
 
+.leaderboard-row-empty {
+  color: transparent;
+}
+
 .lb-rank {
   font-size: 1.15rem;
   color: var(--color-text-light);

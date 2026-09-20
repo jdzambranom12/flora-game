@@ -25,6 +25,7 @@ class FloraGame {
 
     // Plantas y entidades
     this.plants = [];
+    this.spawnSequence = 0;
     this.slicedPieces = [];
     this.particles = [];
     this.floatingTexts = [];
@@ -215,6 +216,7 @@ class FloraGame {
     this.currentCombo = 0;
     this.maxCombo = 1;
     this.plants = [];
+    this.spawnSequence = 0;
     this.slicedPieces = [];
     this.particles = [];
     this.floatingTexts = [];
@@ -224,6 +226,10 @@ class FloraGame {
     this.isRunning = true;
     this.isPaused = false;
     this.lastTimestamp = performance.now();
+
+    if (window.uiManager) {
+      window.uiManager.updateHUD(this.score, Math.ceil(this.timer), this.entanglements);
+    }
 
     if (window.audioManager) {
       window.audioManager.setTensionLevel(0);
@@ -285,21 +291,23 @@ class FloraGame {
     // 40–60s: MÁXIMA PRESIÓN (A los 40s exactos)
     let growthMultiplier = 1.0;
     let moveMultiplier = 1.0;
-    let spawnInterval = 2.6;
+    let spawnInterval = 2.3;
     let maxPlants = 2;
 
     if (elapsed < 20.0) {
       // Fase 0: Calma
+      const phaseProgress = elapsed / 20.0;
       if (this.currentPhase !== 0) {
         this.currentPhase = 0;
         if (window.audioManager) window.audioManager.setTensionLevel(0);
       }
       growthMultiplier = 1.0;
-      moveMultiplier = 1.0;
-      spawnInterval = 2.4;
-      maxPlants = 2;
+      moveMultiplier = 1.2;
+      spawnInterval = 2.3 - phaseProgress * 0.4;
+      maxPlants = 2 + Math.floor(phaseProgress * 2);
     } else if (elapsed < 40.0) {
       // Fase 1: Aumento fuerte
+      const phaseProgress = (elapsed - 20.0) / 20.0;
       if (this.currentPhase !== 1) {
         this.currentPhase = 1;
         this.phaseAlertText = '¡CRECIMIENTO RÁPIDO!';
@@ -310,11 +318,12 @@ class FloraGame {
         }
       }
       growthMultiplier = 2.0; // Maduran el doble de rápido
-      moveMultiplier = 1.85;  // Se acercan mucho más rápido
-      spawnInterval = 1.15;
-      maxPlants = 4;
+      moveMultiplier = 2.35;  // Se acercan mucho más rápido
+      spawnInterval = 1.9 - phaseProgress * 0.95;
+      maxPlants = 3 + Math.floor(phaseProgress * 3);
     } else {
       // Fase 2: Caos / Máxima presión
+      const phaseProgress = Math.min(1, (elapsed - 40.0) / 20.0);
       if (this.currentPhase !== 2) {
         this.currentPhase = 2;
         this.phaseAlertText = '¡MÁXIMA PRESIÓN!';
@@ -325,9 +334,9 @@ class FloraGame {
         }
       }
       growthMultiplier = 3.2; // Crecimiento vertiginoso
-      moveMultiplier = 2.6;   // Avance veloz
-      spawnInterval = 0.72;
-      maxPlants = 7;
+      moveMultiplier = 3.4;   // Avance veloz
+      spawnInterval = 0.95 - phaseProgress * 0.4;
+      maxPlants = 5 + Math.floor(phaseProgress * 4);
     }
 
     // Temporizador de alerta en pantalla
@@ -422,7 +431,25 @@ class FloraGame {
     const spawnX = this.floraX + Math.cos(angle) * spawnDist;
     const spawnY = this.floraY + Math.sin(angle) * spawnDist;
 
-    const plant = new Plant(type, spawnX, spawnY, this.floraX, this.floraY, growthMult, moveMult);
+    const phaseSpeedProfiles = [
+      [0.78, 1.0, 1.22, 0.9, 1.12],
+      [0.8, 1.1, 1.4, 0.95, 1.25],
+      [0.72, 1.15, 1.55, 0.9, 1.35, 1.75]
+    ];
+    const profile = phaseSpeedProfiles[this.currentPhase];
+    const speedVariation = profile[this.spawnSequence % profile.length];
+    this.spawnSequence++;
+
+    const plant = new Plant(
+      type,
+      spawnX,
+      spawnY,
+      this.floraX,
+      this.floraY,
+      growthMult,
+      moveMult,
+      speedVariation
+    );
     this.plants.push(plant);
   }
 
@@ -434,6 +461,8 @@ class FloraGame {
 
       // SOLO CORTA SI ESTÁ EN ETAPA 2 O 3 (MADURA)
       if (plant.checkCutIntersection(p1, p2)) {
+        plant.hasBeenScored = true;
+        plant.isDead = true;
         cutsInThisStroke++;
         this.plantsCut++;
 
@@ -518,6 +547,7 @@ class FloraGame {
 
   _endGame(isWin) {
     this.stopGame();
+    const finalScore = this.score;
 
     if (window.audioManager) {
       if (isWin) {
@@ -530,7 +560,7 @@ class FloraGame {
     if (window.uiManager) {
       window.uiManager.showResultScreen({
         isWin,
-        score: this.score,
+        score: finalScore,
         plantsCut: this.plantsCut,
         entanglements: this.entanglements,
         playerName: this.playerName,
