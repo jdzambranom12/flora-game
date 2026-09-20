@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Flora: Ayúdala a mantener la calma</title>
+  <meta name="description" content="Un videojuego 2D sobre el manejo de la ansiedad a través de la meditación y el corte de plantas invasoras.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/jpeg" href="assets/flora_tranquila.jpg">
+</head>
+<body>
+  <div id="app-container">
+
+    <!-- 1. PANTALLA DE INICIO -->
+    <section id="screen-start" class="screen">
+      <div class="start-content-card">
+        <div class="brand-header">
+          <img src="assets/flora_tranquila.png" alt="Flora meditando" class="start-flora-preview">
+          <h1 class="game-title">FLORA</h1>
+          <p class="game-subtitle">Ayúdala a mantener la calma</p>
+        </div>
+
+        <p class="game-explanation">
+          Las plantas crecen y se acercan a Flora. Córtalas antes de que la envuelvan.
+        </p>
+
+        <!-- Mini guía visual de las 3 etapas -->
+        <div class="mini-guide">
+          <div class="guide-step">
+            <span class="step-icon">🌱</span>
+            <span class="step-title">1. Brote</span>
+            <span class="step-desc">Espera a que madure (no se puede cortar)</span>
+          </div>
+          <div class="guide-step">
+            <span class="step-icon">🌿</span>
+            <span class="step-title">2. Crecida</span>
+            <span class="step-desc">¡Desliza para cortarla con rapidez!</span>
+          </div>
+          <div class="guide-step">
+            <span class="step-icon">⚠️</span>
+            <span class="step-title">3. Se acerca</span>
+            <span class="step-desc">¡Evita que toque y enrede a Flora!</span>
+          </div>
+        </div>
+
+        <!-- Entrada de nombre del jugador -->
+        <div class="name-input-group">
+          <label for="player-name-input" class="name-label">ESCRIBE TU NOMBRE</label>
+          <input
+            type="text"
+            id="player-name-input"
+            class="name-input"
+            placeholder="TU NOMBRE..."
+            maxlength="16"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <div id="name-error-msg" class="name-error hidden"></div>
+        </div>
+
+        <!-- Botones -->
+        <div class="actions-group">
+          <button id="btn-start" class="btn-primary">COMENZAR</button>
+          <button id="btn-leaderboard-menu" class="btn-secondary">MEJORES PUNTAJES</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. PANTALLA DE JUEGO -->
+    <section id="screen-game" class="screen hidden">
+      <!-- HUD Superior -->
+      <header class="game-hud">
+        <div id="hud-score" class="hud-item">PUNTAJE: 0</div>
+        <div id="hud-timer" class="hud-item hud-timer">TIEMPO: 60</div>
+        <div id="hud-entanglements" class="hud-item">ENREDOS: 0 / 3</div>
+      </header>
+
+      <!-- Lienzo principal interactivo -->
+      <canvas id="game-canvas"></canvas>
+
+      <!-- Controles en pantalla -->
+      <div class="hud-controls">
+        <button id="btn-mute-toggle" class="btn-hud-control" title="Activar/Desactivar sonido">
+          🔊 <span class="btn-text">Sonido: SÍ</span>
+        </button>
+        <button id="btn-pause" class="btn-hud-control" title="Pausar juego">
+          ⏸️ <span class="btn-text">Pausa</span>
+        </button>
+      </div>
+
+      <!-- Modal de Pausa -->
+      <div id="modal-pause" class="modal-overlay hidden">
+        <div class="modal-card">
+          <h2 class="modal-title">Juego en Pausa</h2>
+          <p>Tómate un respiro y cuando estés listo, continúa ayudando a Flora.</p>
+          <div class="actions-group">
+            <button id="btn-resume" class="btn-primary">CONTINUAR</button>
+            <button id="btn-quit" class="btn-secondary">SALIR AL MENÚ</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PANTALLA DE RESULTADO -->
+    <section id="screen-result" class="screen hidden">
+      <div class="result-card">
+        <h2 id="result-title" class="result-title">¡LO LOGRASTE!</h2>
+        <p id="result-subtitle" class="result-subtitle">Flora ha mantenido la serenidad</p>
+
+        <img id="result-portrait" src="assets/flora_victoriosa.png" alt="Estado final de Flora" class="result-portrait">
+
+        <div class="stats-grid">
+          <div class="stat-item stat-score" id="result-score">PUNTAJE FINAL: 0</div>
+          <div class="stat-item" id="result-plants">PLANTAS CORTADAS: 0</div>
+          <div class="stat-item" id="result-entanglements">ENREDOS: 0 / 3</div>
+          <div class="stat-item" id="result-combo">MEJOR COMBO: x1</div>
+        </div>
+
+        <div id="save-confirm-msg" class="save-feedback hidden"></div>
+
+        <div class="actions-group">
+          <button id="btn-save-score" class="btn-primary btn-save">💾 GUARDAR PUNTAJE</button>
+          <button id="btn-play-again" class="btn-primary">JUGAR DE NUEVO</button>
+          <button id="btn-leaderboard-result" class="btn-secondary">MEJORES PUNTAJES</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PANTALLA DE MEJORES PUNTAJES (LEADERBOARD) -->
+    <section id="screen-leaderboard" class="screen hidden">
+      <div class="leaderboard-card">
+        <h2 class="leaderboard-title">MEJORES PUNTAJES</h2>
+
+        <div id="leaderboard-list" class="leaderboard-list">
+          <!-- Filas generadas dinámicamente -->
+        </div>
+
+        <div class="actions-group">
+          <button id="btn-back-leaderboard" class="btn-secondary">VOLVER</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Scripts del juego -->
+  <script src="js/audio.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/plants.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
